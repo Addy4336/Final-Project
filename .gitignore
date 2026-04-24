@@ -11,7 +11,7 @@ build/
 dist/
 
 # AI Models (Large files)
-models/
+/models/
 *.pt
 *.pth
 *.bin
