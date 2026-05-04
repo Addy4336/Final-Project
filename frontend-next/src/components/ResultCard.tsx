@@ -1,110 +1,110 @@
 "use client";
 
-import { Brain, Compass, FileImage, ScanText, Sparkles } from "lucide-react";
-import type { VqaResponse } from "@/lib/api";
+import type { UiMode, VqaResponse } from "@/lib/api";
 
-interface Props { result: VqaResponse; loading?: boolean; onSuggest?: (q: string) => void; }
-
-function ConfidenceRing({ value, color }: { value: number; color: string }) {
-  const r = 44;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (value / 100) * circ;
-  return (
-    <svg width="104" height="104" viewBox="0 0 104 104">
-      <circle cx="52" cy="52" r={r} fill="none" stroke="#2f3445" strokeWidth="8" />
-      <circle
-        cx="52" cy="52" r={r} fill="none"
-        stroke={color} strokeWidth="8" strokeLinecap="round"
-        strokeDasharray={circ} strokeDashoffset={offset}
-        className="conf-ring"
-        style={{ transform: "rotate(-90deg)", transformOrigin: "52px 52px", transition: "stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)" }}
-      />
-      <text x="52" y="52" textAnchor="middle" dominantBaseline="central" fill={color} fontSize="15" fontWeight="700" fontFamily="JetBrains Mono, monospace">
-        {value.toFixed(0)}%
-      </text>
-    </svg>
-  );
+interface Props { 
+  data: VqaResponse; 
+  mode: UiMode; 
+  question: string;
+  imageUrl?: string; 
 }
 
 function confColor(v: number) {
-  if (v >= 75) return "#4ade80";
-  if (v >= 45) return "#fbbf24";
-  return "#f87171";
+  if (v >= 75) return "#22d3ee"; // Cyan
+  if (v >= 45) return "#818cf8"; // Indigo
+  return "#fb7185"; // Rose
 }
 
-function ModelBadge({ label, answer, conf, accent }: { label: string; answer: string; conf: number; accent: string }) {
-  return (
-    <div className="glass-card p-4 space-y-2" style={{ borderColor: `${accent}22` }}>
-      <p className="label-meta" style={{ color: accent, fontSize: "0.6rem" }}>{label}</p>
-      <p className="text-sm text-on-surface leading-relaxed min-h-[3rem]">{answer || "—"}</p>
-      <div className="flex items-center gap-2">
-        <div className="flex-1 h-1 rounded-full bg-surface-highest overflow-hidden">
-          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${conf}%`, background: `linear-gradient(90deg, ${accent}88, ${accent})` }} />
-        </div>
-        <span className="mono text-xs" style={{ color: accent }}>{conf.toFixed(1)}%</span>
-      </div>
-    </div>
-  );
-}
-
-export function ResultCard({ result, onSuggest }: Props) {
-  const conf = result.confidence || result.hybrid?.confidence || 0;
-  const answer = result.hybrid?.answer || result.answer || "Unable to determine";
-  const explanation = result.hybrid?.explanation || "";
+export function ResultCard({ data, mode, question }: Props) {
+  const conf = data.confidence || data.hybrid?.confidence || 0;
+  const answer = data.hybrid?.answer || data.answer || "Unable to determine";
+  const explanation = data.hybrid?.explanation || "";
   const color = confColor(conf);
 
   return (
-    <div className="space-y-4 animate-fade-up">
-      {/* Main answer card */}
-      <div className="glass-card p-6">
-        <div className="flex items-start justify-between gap-6">
-          <div className="flex-1 min-w-0">
-            <p className="label-meta mb-2">Final Response</p>
-            <h2 className="text-2xl font-bold text-on-surface leading-tight break-words">{answer}</h2>
-            {explanation && <p className="mt-3 text-sm text-on-surface-variant leading-relaxed">{explanation}</p>}
-            <div className="flex flex-wrap gap-2 mt-4">
-              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-highest text-on-surface-variant mono uppercase tracking-wide">
-                {result.model || "AUTO"}
-              </span>
-              {result.answer_type && (
-                <span className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: "rgba(192,193,255,0.12)", color: "#c0c1ff" }}>
-                  {result.answer_type}
-                </span>
-              )}
-              {result.time_ms != null && (
-                <span className="px-2.5 py-1 rounded-full text-xs bg-surface-highest text-on-surface-variant mono">
-                  {result.time_ms}ms
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="shrink-0 text-center">
-            <ConfidenceRing value={conf} color={color} />
-            <p className="label-meta mt-1" style={{ color, fontSize: "0.6rem" }}>
-              {conf >= 75 ? "High" : conf >= 45 ? "Medium" : "Low"}
+    <div className="animate-fade-up w-full max-w-5xl mx-auto flex flex-col gap-16">
+      
+      {/* ── META HEADER ── */}
+      <div className="flex justify-between items-start border-b border-white/5 pb-4">
+        <div>
+          <p className="font-mono text-[10px] tracking-[0.3em] uppercase text-white/40 mb-1">Query Parameter</p>
+          <p className="font-serif text-xl text-white/80 italic">&quot;{question}&quot;</p>
+        </div>
+        <div className="text-right">
+          <p className="font-mono text-[10px] tracking-[0.3em] uppercase text-white/40 mb-1">Execution Mode</p>
+          <p className="font-mono text-xs uppercase tracking-widest text-tertiary">{mode}</p>
+        </div>
+      </div>
+
+      {/* ── THE MAJESTIC METRIC ── */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative">
+        <div className="absolute inset-0 bg-tertiary/5 blur-[80px] rounded-full pointer-events-none -z-10" />
+        
+        <div className="flex-1">
+          <p className="font-mono text-[10px] tracking-[0.4em] uppercase text-white/30 mb-6">Primary Synthesis</p>
+          <h2 className="font-serif text-5xl md:text-[5rem] leading-[1.1] tracking-tight text-white mb-6">
+            {answer}
+          </h2>
+          {explanation && (
+            <p className="font-sans text-sm text-white/50 leading-relaxed max-w-xl border-l border-tertiary/20 pl-4">
+              {explanation}
             </p>
+          )}
+        </div>
+
+        <div className="shrink-0 flex flex-col items-center justify-center relative">
+          <svg width="200" height="200" viewBox="0 0 200 200" className="-rotate-90">
+            <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="2" />
+            <circle
+              cx="100" cy="100" r="90" fill="none"
+              stroke={color} strokeWidth="1" strokeLinecap="square"
+              strokeDasharray={2 * Math.PI * 90} 
+              strokeDashoffset={(2 * Math.PI * 90) - ((conf / 100) * (2 * Math.PI * 90))}
+              className="transition-all duration-1000 ease-out"
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="font-serif text-5xl font-light tracking-tighter" style={{ color }}>
+              {conf.toFixed(0)}<span className="text-2xl text-white/30">%</span>
+            </span>
+            <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/30 mt-2">Confidence</span>
           </div>
         </div>
       </div>
 
-      {/* Model comparison */}
-      <div className="grid grid-cols-3 gap-3">
-        <ModelBadge label="Baseline" answer={result.base_answers?.[0]?.answer || "—"} conf={result.base_answers?.[0]?.confidence || 0} accent="#908fa0" />
-        <ModelBadge label="Fine-Tuned" answer={result.ft_answers?.[0]?.answer || "—"} conf={result.ft_answers?.[0]?.confidence || 0} accent="#c0c1ff" />
-        <ModelBadge label="Hybrid" answer={answer} conf={conf} accent="#2fd9f4" />
-      </div>
-
-      {/* Suggested queries */}
-      {result.suggested_queries?.length ? (
-        <div className="glass-card p-4">
-          <p className="label-meta mb-3">Follow-up Prompts</p>
-          <div className="flex flex-wrap gap-2">
-            {result.suggested_queries.map((q) => (
-              <button key={q} className="question-chip" onClick={() => onSuggest?.(q)}>{q}</button>
+      {/* ── DATA VISUALIZATION / ENTITIES ── */}
+      {data.ocr_metadata?.fields && Object.keys(data.ocr_metadata.fields).length > 0 && (
+        <div className="mt-8">
+          <p className="font-mono text-[10px] tracking-[0.3em] uppercase text-white/30 mb-6">Extracted Entities</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5 border border-white/5 rounded-xl overflow-hidden">
+            {Object.entries(data.ocr_metadata.fields).map(([label, value], idx) => (
+              <div key={idx} className="bg-[#02040a] p-5 group hover:bg-white/[0.02] transition-colors relative overflow-hidden">
+                <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-tertiary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/30 mb-2 truncate">
+                  {label.replace(/_/g, " ")}
+                </p>
+                <p className="font-serif text-lg text-white/90 truncate">{value}</p>
+              </div>
             ))}
           </div>
         </div>
-      ) : null}
+      )}
+
+      {/* ── TECHNICAL READOUTS ── */}
+      <div className="mt-8 flex gap-8 border-t border-white/5 pt-8">
+        <div>
+          <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-white/30 mb-1">Latency</p>
+          <p className="font-mono text-xs text-white/60">{data.time_ms != null ? `${data.time_ms}ms` : "—"}</p>
+        </div>
+        <div>
+          <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-white/30 mb-1">Routing Logic</p>
+          <p className="font-mono text-xs text-white/60">{data.answer_type || "Standard"}</p>
+        </div>
+        <div>
+          <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-white/30 mb-1">Engine</p>
+          <p className="font-mono text-xs text-white/60">{data.model || "Nexus Core"}</p>
+        </div>
+      </div>
     </div>
   );
 }

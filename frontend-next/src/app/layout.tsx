@@ -1,33 +1,40 @@
 import type { Metadata } from "next";
+import { DM_Serif_Display, IBM_Plex_Mono, DM_Sans } from "next/font/google";
 import "./globals.css";
 
+const dmSerifDisplay = DM_Serif_Display({
+  weight: ["400"],
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  weight: ["400", "500", "600"],
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  weight: ["300", "400", "500"],
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "VisionQuery Nexus — PhD Research Console",
+  title: "VisionQuery — Multimodal Research Console",
   description:
-    "Multimodal AI research console combining OCR, VQA, and Satellite analysis with hybrid reasoning. Built for PhD-level academic research.",
+    "PhD-grade multimodal AI research instrument combining OCR, VQA, and Satellite analysis with hybrid reasoning.",
   keywords: ["VQA", "OCR", "satellite analysis", "multimodal AI", "research"],
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="surface-noise min-h-screen">{children}</body>
+    <html lang="en" className={`dark ${dmSerifDisplay.variable} ${ibmPlexMono.variable} ${dmSans.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }
